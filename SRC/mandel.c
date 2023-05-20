@@ -42,14 +42,13 @@ uint8_t* __plot_mandel(int width, int height, int granularity) {
 
 void __calc_row(row_t* r) {
     double complex comp;
-    __imag__ comp = -1 + (r->row_ID / r->height) * 2;
+    __imag__ comp = -1 + (r->row_ID / (double)r->height) * 2;
     for (int x = 0; x < r->width; x++) {
 		int val = 0;
-		__real__ comp = -2 + (x / r->width)*3;
+		__real__ comp = -2 + (x / (double)r->width)*3;
 		for(double complex z = 0 + 0 * I; cabs(z) < 2 && val < r->granularity; val++)
 			z = z*z + comp;
         pthread_mutex_lock(&mutex);
-        printf("%d\n", val);
         r->pixels[3 * (r->row_ID * r->width + x) + 0] = r->granularity * val % 256;
         r->pixels[3 * (r->row_ID * r->width + x) + 1] = r->granularity * val % 256;
         r->pixels[3 * (r->row_ID * r->width + x) + 2] = r->granularity * val % 256;

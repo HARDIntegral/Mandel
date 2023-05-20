@@ -4,7 +4,7 @@
 
 int main(int argc, char **argv) {
     printf("Hello, world!\n");
-    int dims[2] = {64, 36};
+    int dims[2] = {640, 360};
     createImage(
         "test.bmp", dims[0], dims[1],
         __plot_mandel(dims[0], dims[1], 100)
