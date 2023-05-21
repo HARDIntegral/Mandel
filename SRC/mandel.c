@@ -12,6 +12,8 @@ pthread_t thread_pool[THREAD_POOL_SIZE];
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
+queue_t* w_q;
+
 void* thread_function(void* arg);
 
 void init_thread_pool() {
@@ -22,6 +24,7 @@ void init_thread_pool() {
 
 uint8_t* __plot_mandel(int width, int height, int granularity) {
     uint8_t* pixels = (uint8_t*)malloc(3* width * height * sizeof(uint8_t));
+    w_q = init_queue();
     init_thread_pool();
 
     for (int i = 0; i < height; i++) {
@@ -32,11 +35,17 @@ uint8_t* __plot_mandel(int width, int height, int granularity) {
         r->width = width;
         r->pixels = pixels;
         pthread_mutex_lock(&mutex);
-        enqueue(r);
+        enqueue(w_q, r);
         pthread_cond_signal(&cond);
         pthread_mutex_unlock(&mutex);
     }
 
+    while (w_q->size > 0) {
+        pthread_mutex_lock(&mutex);
+        pthread_cond_signal(&cond);
+        pthread_mutex_unlock(&mutex);
+    }
+    
     return pixels;
 }
 
@@ -60,9 +69,11 @@ void* thread_function(void* arg) {
     while (true) {
         pthread_mutex_lock(&mutex);
         pthread_cond_wait(&cond, &mutex);
-        row_t* r = dequeue();
+        node_r* n_r = dequeue(w_q);
         pthread_mutex_unlock(&mutex);
-        if (r) 
-            __calc_row(r);
+        if (n_r->num_left >= 0) 
+            __calc_row(n_r->r);
+        else
+            break;
     }
 }

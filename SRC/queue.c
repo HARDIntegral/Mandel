@@ -2,28 +2,40 @@
 
 #include "queue.h"
 
-node_t* head_node = NULL;
-node_t* tail_node = NULL;
+queue_t* init_queue() {
+    queue_t* q = (queue_t*)malloc(sizeof(queue_t));
+    q->head_node = NULL;
+    q->tail_node = NULL;
+    q->size = 0;
+    return q;
+}
 
-void enqueue(row_t* r) {
+void enqueue(queue_t* q, row_t* r) {
     node_t* new_node = (node_t*)malloc(sizeof(node_t));
     new_node->r = r;
     new_node->next = NULL;
-    if (tail_node == NULL) 
-        head_node = new_node;
+    if (q->tail_node == NULL) 
+        q->head_node = new_node;
     else 
-        tail_node->next = new_node;
-    tail_node = new_node;
+        q->tail_node->next = new_node;
+    q->tail_node = new_node;
+    q->size++;
 }
 
-row_t* dequeue() {
-    if (head_node == NULL)
+node_r* dequeue(queue_t* q) {
+    node_r* result = (node_r*)malloc(sizeof(node_r));
+
+    if (q->head_node == NULL)
         return NULL;
-    row_t* result = head_node->r;
-    node_t* tmp = head_node;
-    head_node = head_node->next;
-    if (head_node == NULL)
-        tail_node = NULL;
+    result->r = q->head_node->r;
+    result->num_left = q->size - 1;
+    q->size--;
+
+    node_t* tmp = q->head_node;
+    q->head_node = q->head_node->next;
+    if (q->head_node == NULL)
+        q->tail_node = NULL;
     free(tmp);
+
     return result;
 }
