@@ -22,8 +22,14 @@ void init_thread_pool() {
     }
 }
 
-uint8_t* __plot_mandel(int width, int height, int granularity) {
-    uint8_t* pixels = (uint8_t*)malloc(3* width * height * sizeof(uint8_t));
+void kill_thread_pool() {
+    for (int i = 0; i < THREAD_POOL_SIZE; i++) {
+        pthread_kill(thread_pool[i], NULL);
+    }
+}
+
+uint4_t** __plot_mandel(int width, int height, int granularity) {
+    uint4_t** pixels = (uint4_t**)malloc(width * height * sizeof(uint4_t*));
     w_q = init_queue();
     init_thread_pool();
 
@@ -46,6 +52,9 @@ uint8_t* __plot_mandel(int width, int height, int granularity) {
         pthread_mutex_unlock(&mutex);
     }
     
+    kill_queue(w_q);
+    kill_thread_pool();
+
     return pixels;
 }
 
@@ -58,9 +67,9 @@ void __calc_row(row_t* r) {
 		for(double complex z = 0 + 0 * I; cabs(z) < 2 && val < r->granularity; val++)
 			z = z*z + comp;
         pthread_mutex_lock(&mutex);
-        r->pixels[3 * (r->row_ID * r->width + x) + 0] = r->granularity * val % 256;
-        r->pixels[3 * (r->row_ID * r->width + x) + 1] = r->granularity * val % 256;
-        r->pixels[3 * (r->row_ID * r->width + x) + 2] = r->granularity * val % 256;
+        uint4_t* val4 = (uint4_t*)malloc(sizeof(uint4_t));
+        val4->value = r->granularity * val % 16;
+        r->pixels[r->row_ID * r->width + x] = *val4;
         pthread_mutex_unlock(&mutex);
 	}
 }
@@ -71,8 +80,11 @@ void* thread_function(void* arg) {
         pthread_cond_wait(&cond, &mutex);
         node_r* n_r = dequeue(w_q);
         pthread_mutex_unlock(&mutex);
-        if (n_r->num_left >= 0) 
+        if (n_r->num_left >= 0) {
             __calc_row(n_r->r);
+            free(n_r->r);
+            free(n_r);
+        }
         else
             break;
     }

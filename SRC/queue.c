@@ -10,6 +10,10 @@ queue_t* init_queue() {
     return q;
 }
 
+void kill_queue(queue_t* q) {
+    free(q);
+}
+
 void enqueue(queue_t* q, row_t* r) {
     node_t* new_node = (node_t*)malloc(sizeof(node_t));
     new_node->r = r;

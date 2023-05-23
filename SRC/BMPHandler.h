@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdint.h>
 
+typedef struct { unsigned value: 4; } uint4_t;
+
 typedef struct {
     char Type[2];
 } BMPSignature;
@@ -26,4 +28,4 @@ typedef struct {
     uint32_t ImportantColors;
 } BMPImgHeader;
 
-void createImage(const char* name, uint32_t ImageWidth, uint32_t ImageHeight, uint8_t* pixels);
+void createImage(const char* name, uint32_t ImageWidth, uint32_t ImageHeight, uint4_t** pixels);

@@ -1,6 +1,6 @@
 #include "BMPHandler.h"
 
-void createImage(const char* name, uint32_t ImageWidth, uint32_t ImageHeight, uint8_t* pixels) {
+void createImage(const char* name, uint32_t ImageWidth, uint32_t ImageHeight, uint4_t** pixels) {
     // init structs
     BMPSignature BMP_S;
     BMPFileHeader BMP_FH;
@@ -10,7 +10,7 @@ void createImage(const char* name, uint32_t ImageWidth, uint32_t ImageHeight, ui
     BMP_S.Type[1] = 'M';
 
     // calculate padding
-    uint8_t padding = (ImageWidth * 3) % 4;
+    uint8_t padding = ImageWidth % 4;
 
     // header information
     BMP_FH.FileSize = (ImageWidth * 3 + padding) * ImageHeight + 54;
@@ -21,7 +21,7 @@ void createImage(const char* name, uint32_t ImageWidth, uint32_t ImageHeight, ui
     BMP_IH.Width = ImageWidth;
     BMP_IH.Height = ImageHeight;
     BMP_IH.Planes = 1;
-    BMP_IH.BPP = 24;
+    BMP_IH.BPP = 4;
     BMP_IH.Compression = 0;
     BMP_IH.ImageSize = 0;
     BMP_IH.xPPM = 0;
@@ -40,12 +40,12 @@ void createImage(const char* name, uint32_t ImageWidth, uint32_t ImageHeight, ui
     // painting
     for(uint32_t y = 0; y < ImageHeight; y++) {
         for(uint32_t x = 0; x < ImageWidth; x++) {
-            fputc(pixels[3 * (y * ImageWidth + x) + 0], file);
-            fputc(pixels[3 * (y * ImageWidth + x) + 1], file);
-            fputc(pixels[3 * (y * ImageWidth + x) + 2], file);
+            // why is accessing the array seg faulting?
+            fputc(pixels[y * ImageWidth + x]->value, file);
         }
         if(padding) for(uint8_t i = 0; i < padding; i++) fputc(0, file);
     }
-
+    
+    free(pixels);
     fclose(file);
 }
